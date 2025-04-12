@@ -6,7 +6,8 @@ import {
   ViroTrackingStateConstants,
 } from '@reactvision/react-viro';
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View, Button, SafeAreaView } from 'react-native';
+import CircularMenuExample from './src/components/CircularMenuExample';
 
 const HelloWorldSceneAR = () => {
   const [text, setText] = useState('Initializing AR...');
@@ -32,20 +33,53 @@ const HelloWorldSceneAR = () => {
   );
 };
 
-export default () => {
+const App = () => {
+  const [showAR, setShowAR] = useState(false);
+  const [showCircularMenu, setShowCircularMenu] = useState(false);
+
+  if (showAR) {
+    return (
+      <ViroARSceneNavigator
+        autofocus={true}
+        initialScene={{
+          scene: HelloWorldSceneAR,
+        }}
+        style={styles.f1}
+      />
+    );
+  }
+
+  if (showCircularMenu) {
+    return <CircularMenuExample />;
+  }
+
   return (
-    <ViroARSceneNavigator
-      autofocus={true}
-      initialScene={{
-        scene: HelloWorldSceneAR,
-      }}
-      style={styles.f1}
-    />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.buttonContainer}>
+        <Button title="Show AR Demo" onPress={() => setShowAR(true)} />
+        <View style={styles.buttonSpacer} />
+        <Button title="Show Circular Menu Demo" onPress={() => setShowCircularMenu(true)} />
+      </View>
+    </SafeAreaView>
   );
 };
 
-var styles = StyleSheet.create({
-  f1: { flex: 1 },
+const styles = StyleSheet.create({
+  f1: { 
+    flex: 1 
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+  },
+  buttonContainer: {
+    width: '80%',
+  },
+  buttonSpacer: {
+    height: 20,
+  },
   helloWorldTextStyle: {
     fontFamily: 'Arial',
     fontSize: 30,
@@ -54,3 +88,5 @@ var styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+export default App;
