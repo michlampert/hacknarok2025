@@ -74,7 +74,7 @@ const RuneIcon: React.FC<RuneIconProps> = ({
 
   return (
     <View style={[styles.container, { width: size, height: size }, style]}>
-      <Text style={[styles.runeText, { fontSize: size * 0.8, color }]}>
+      <Text style={[styles.runeText, { fontSize: size, color }]}>
         {runeSymbols[rune]}
       </Text>
     </View>
@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
   },
   runeText: {
     fontWeight: 'bold',
+    marginTop: -10,
   },
 });
 

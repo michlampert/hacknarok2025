@@ -57,7 +57,7 @@ const CircularMenuExample: React.FC = () => {
     },
   ];
   
-  // Handle the action when a menu option is selected
+
   const handleOptionSelect = (optionId: string) => {
     Alert.alert('Action Selected', `You selected: ${optionId}`);
     
@@ -77,14 +77,6 @@ const CircularMenuExample: React.FC = () => {
     }
     
     const { pageX, pageY } = event.nativeEvent;
-    
-    // Adjust position to ensure menu stays within screen bounds
-    const windowWidth = Dimensions.get('window').width;
-    const windowHeight = Dimensions.get('window').height;
-    
-    // This is the exact position where the user tapped
-    // We no longer need to adjust for centering since the menu container
-    // is designed to be positioned at exactly the tap point
     setMenuPosition({ x: pageX, y: pageY });
     setMenuVisible(true);
   };
@@ -102,9 +94,9 @@ const CircularMenuExample: React.FC = () => {
         position={menuPosition}
         onOptionSelect={handleOptionSelect}
         options={menuOptions}
-        distance={120}  // Adjusted distance for better visual appearance
-        optionHeight={45}
-        optionWidth={140}  // Made slightly wider for better text display
+        distance={120} 
+        optionHeight={30}
+        optionWidth={100}
       />
     </TouchableOpacity>
   );

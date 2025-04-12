@@ -36,97 +36,115 @@ const CircularMenu: React.FC<CircularMenuProps> = ({
   distance = 150,
   optionHeight = 40,
   optionWidth = 120,
-  startAngle = -Math.PI / 2, // Start from top (12 o'clock position)
+  startAngle = -Math.PI / 2,
 }) => {
   const scale = useRef(new Animated.Value(0)).current;
-  
+  const positions = useRef(options.map(() => new Animated.ValueXY({ x: 0, y: 0 }))).current;
+
   useEffect(() => {
-    Animated.spring(scale, {
-      toValue: isVisible ? 1 : 0,
-      friction: 5,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
+    if (isVisible) {
+      options.forEach((_, index) => {
+        const { x, y } = getOptionPosition(index, options.length);
+        Animated.spring(positions[index], {
+          toValue: { x, y },
+          friction: 5,
+          tension: 40,
+          useNativeDriver: true,
+        }).start();
+      });
+      Animated.spring(scale, {
+        toValue: 1,
+        friction: 5,
+        tension: 40,
+        useNativeDriver: true,
+      }).start();
+    } else {
+
+      options.forEach((_, index) => {
+        Animated.spring(positions[index], {
+          toValue: { x: 0, y: 0 },
+          friction: 5,
+          tension: 40,
+          useNativeDriver: true,
+        }).start();
+      });
+      Animated.spring(scale, {
+        toValue: 0,
+        friction: 5,
+        tension: 40,
+        useNativeDriver: true,
+      }).start();
+    }
   }, [isVisible]);
 
   const getOptionPosition = (index: number, total: number) => {
-    // Calculate angle with equal distribution and specified starting point
-    // Using startAngle (default: -Math.PI/2) ensures the first item is at the top (12 o'clock)
-    // and items are distributed clockwise around the circle
     const angleStep = (2 * Math.PI) / total;
     const angle = startAngle + (index * angleStep);
-    
-    // Calculate position using angle
-    // Using cos for x and sin for y creates a proper circular distribution
     const x = Math.cos(angle) * distance;
     const y = Math.sin(angle) * distance;
     return { x, y };
   };
 
-  if (!isVisible) {
+  if (!isVisible && scale.__getValue() === 0) {
     return null;
   }
 
   return (
-<View
-  style={[
-    styles.container,
-    {
-      left: position.x,
-      top: position.y,
-      width: 2 * distance,
-      height: 2 * distance,
-      transform: [
-        { translateX: -distance },
-        { translateY: -distance },
-      ],
-    },
-  ]}
->
-  {options.map((option, index) => {
-    const { x, y } = getOptionPosition(index, options.length);
-
-    return (
-      <Animated.View
-        key={option.id}
-        style={[
-          styles.option,
-          {
-            position: 'absolute',
-            width: optionWidth,
-            height: optionHeight,
-            left: distance + x - optionWidth / 2,
-            top: distance + y - optionHeight / 2,
-            borderRadius: optionHeight / 2,
-            backgroundColor: '#ffffff',
-            borderColor: option.color,
-            borderWidth: 1,
-            transform: [{ scale }],
-            opacity: scale,
-          },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.optionButton}
-          onPress={() => {
-            onOptionSelect(option.id);
-            onToggle(false);
-          }}
+    <View
+      style={[
+        styles.container,
+        {
+          left: position.x,
+          top: position.y,
+          width: 2 * distance,
+          height: 2 * distance,
+          transform: [
+            { translateX: -distance },
+            { translateY: -distance },
+          ],
+        },
+      ]}
+    >
+      {options.map((option, index) => (
+        <Animated.View
+          key={option.id}
+          style={[
+            {
+              position: 'absolute',
+              width: optionWidth,
+              height: optionHeight * 2.5,
+              left: distance - optionWidth / 2,
+              top: distance - (optionHeight * 2.5) / 2,
+              transform: [
+                { translateX: positions[index].x },
+                { translateY: positions[index].y },
+                { scale },
+              ],
+              opacity: scale,
+            },
+          ]}
         >
-          <View style={styles.optionContent}>
-            <View style={[styles.runeContainer, { backgroundColor: option.color }]}>
-              <RuneIcon rune={option.rune} size={optionHeight * 0.6} color="#ffffff" />
+          <TouchableOpacity
+            style={styles.optionButton}
+            onPress={() => {
+              onOptionSelect(option.id);
+              onToggle(false);
+            }}
+          >
+            <View style={styles.optionContent}>
+              <View style={[styles.runeCircle, { backgroundColor: option.color }]}>
+                <RuneIcon rune={option.rune} size={optionHeight} color="#ffffff" />
+              </View>
+              <View style={[styles.textPill, { borderColor: option.color }]}>
+                <Text style={[styles.optionText, { color: option.color }]}>
+                  {option.text}
+                </Text>
+              </View>
             </View>
-            <Text style={[styles.optionText, { color: option.color }]}>
-              {option.text}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  })}
-</View>
-
+          </TouchableOpacity>
+        </Animated.View>
+      ))}
+    </View>
   );
 };
 
@@ -137,17 +155,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 999,
   },
-  option: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    overflow: 'hidden',
-  },
   optionButton: {
     width: '100%',
     height: '100%',
@@ -155,23 +162,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optionContent: {
-    flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-    height: '100%',
+    justifyContent: 'center',
   },
-  runeContainer: {
-    height: '100%',
-    aspectRatio: 1,
+  runeCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: -20,
+  },
+  textPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
   },
   optionText: {
-    flex: 1,
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
-    paddingRight: 10,
   },
 });
 
